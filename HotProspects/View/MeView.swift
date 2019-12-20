@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  MeView.swift
 //  HotProspects
 //
 //  Created by Mario Alberto Barragan Espinosa on 12/20/19.
@@ -8,14 +8,15 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct MeView: View {
+
     var body: some View {
-        Text("Hello World")
+        Text("Hello World!")
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
+struct MeView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        MeView()
     }
 }
