@@ -14,12 +14,17 @@ enum FilterType {
     case none, contacted, uncontacted
 }
 
+enum SortedType {
+    case name, date
+}
+
 struct ProspectsView: View {
     let filter: FilterType
 
     @EnvironmentObject var prospects: Prospects
     
     @State private var isShowingScanner = false
+    @State private var isSortedBy =  SortedType.name
 
     var title: String {
         switch filter {
@@ -33,25 +38,34 @@ struct ProspectsView: View {
     }
 
     var filteredProspects: [Prospect] {
+        var currentProspects = prospects.people
         switch filter {
         case .none:
-            return prospects.people
+            currentProspects = prospects.people
         case .contacted:
-            return prospects.people.filter { $0.isContacted }
+            currentProspects = prospects.people.filter { $0.isContacted }
         case .uncontacted:
-            return prospects.people.filter { !$0.isContacted }
+            currentProspects = prospects.people.filter { !$0.isContacted }
         }
+        if self.isSortedBy == .name {
+          return currentProspects.sorted(by: { $0.name < $1.name })
+        }
+          return currentProspects.sorted(by: { $0.date > $1.date })
     }
   
     var body: some View {
         NavigationView {
             List {
-                ForEach(filteredProspects) { prospect in
-                    VStack(alignment: .leading) {
-                        Text(prospect.name)
-                            .font(.headline)
-                        Text(prospect.emailAddress)
-                            .foregroundColor(.secondary)
+              ForEach(filteredProspects) { prospect in
+                  HStack {
+                      VStack(alignment: .leading) {
+                          Text(prospect.name)
+                              .font(.headline)
+                          Text(prospect.emailAddress)
+                              .foregroundColor(.secondary)
+                      }
+                    Spacer()
+                      prospect.isContacted ? Image(systemName: "person.crop.circle.fill.badge.checkmark") : Image(systemName: "person.crop.circle.badge.xmark")
                     }
                     .contextMenu {
                         Button(prospect.isContacted ? "Mark Uncontacted" : "Mark Contacted" ) {
@@ -66,14 +80,23 @@ struct ProspectsView: View {
                 }
             }
                 .navigationBarTitle(title)
-                .navigationBarItems(trailing: Button(action: {
+              .navigationBarItems(leading: Button(action: {
                     self.isShowingScanner = true
                 }) {
                     Image(systemName: "qrcode.viewfinder")
                     Text("Scan")
-                })
+                },
+                trailing: Button(action: {
+                    if self.isSortedBy  == .name {
+                      self.isSortedBy = .date
+                    } else {
+                      self.isSortedBy = .name
+                    }
+                  }) {
+                    Text("Sort by \(self.isSortedBy == .name ? "date" : "name")")
+                  })
                 .sheet(isPresented: $isShowingScanner) {
-                    CodeScannerView(codeTypes: [.qr], simulatedData: "Paul Hudson\npaul@hackingwithswift.com", completion: self.handleScan)
+                    CodeScannerView(codeTypes: [.qr], simulatedData: "Ario Hudson\npaul@hackingwithswift.com", completion: self.handleScan)
                 }
         }
     }

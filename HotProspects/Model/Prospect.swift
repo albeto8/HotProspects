@@ -13,6 +13,7 @@ class Prospect: Identifiable, Codable {
     var name = "Anonymous"
     var emailAddress = ""
     fileprivate(set) var isContacted = false
+    let date = Date()
 }
 
 class Prospects: ObservableObject {
@@ -21,13 +22,22 @@ class Prospects: ObservableObject {
     static let saveKey = "SavedData"
 
     init() {
+      /*
         if let data = UserDefaults.standard.data(forKey: Self.saveKey) {
             if let decoded = try? JSONDecoder().decode([Prospect].self, from: data) {
                 self.people = decoded
                 return
             }
         }
-        self.people = []
+ */
+       let filename = FileManager.getDocumentsDirectory().appendingPathComponent(Prospects.saveKey)
+        do {
+            let data = try Data(contentsOf: filename)
+            people = try JSONDecoder().decode([Prospect].self, from: data)
+        } catch {
+            print("Unable to load saved data.")
+            self.people = []
+        }
     }
     
     private func save() {
@@ -38,7 +48,8 @@ class Prospects: ObservableObject {
     
     func add(_ prospect: Prospect) {
         people.append(prospect)
-        save()
+        //save()
+        saveData()
     }
     
     func toggle(_ prospect: Prospect) {
@@ -46,4 +57,22 @@ class Prospects: ObservableObject {
         prospect.isContacted.toggle()
         save()
     }
+
+    func saveData() {
+        do {
+          let filename = FileManager.getDocumentsDirectory().appendingPathComponent(Self.saveKey)
+            let data = try JSONEncoder().encode(self.people)
+            try data.write(to: filename, options: [.atomicWrite, .completeFileProtection])
+        } catch {
+            print("Unable to save data.")
+        }
+    }
+}
+
+
+extension FileManager {
+  static func getDocumentsDirectory() -> URL {
+      let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+      return paths[0]
+  }
 }
